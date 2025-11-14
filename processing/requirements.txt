@@ -1,0 +1,6 @@
+# Spark Python dependencies (Nov 2025 - latest versions)
+pyspark==4.0.1
+boto3==1.40.67
+pyarrow==22.0.0
+kafka-python==2.0.2
+python-snappy==0.7.1

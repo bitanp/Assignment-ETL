@@ -1,0 +1,55 @@
+# Prometheus Configuration
+# Defines scrape targets for all metrics sources
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "local-dev"
+    environment: "development"
+
+# Alerting configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Kafka exporter
+  - job_name: "kafka"
+    static_configs:
+      - targets: ["kafka-exporter:9308"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "kafka"
+
+  # IoT Producer metrics
+  - job_name: "producer"
+    static_configs:
+      - targets: ["producer:8082"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "iot-producer"
+
+  # Node exporter (system metrics)
+  - job_name: "node"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "host-system"
+
+  # Spark master (JMX metrics - optional)
+  # Uncomment if JMX exporter is configured
+  # - job_name: 'spark-master'
+  #   static_configs:
+  #     - targets: ['spark-master:9999']

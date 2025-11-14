@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IoT Event Schema",
+  "description": "Schema definition for IoT sensor events",
+  "type": "object",
+  "required": [
+    "event_id",
+    "device_id",
+    "device_type",
+    "timestamp",
+    "event_duration",
+    "value",
+    "status",
+    "metadata"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the event (UUID v4)"
+    },
+    "device_id": {
+      "type": "string",
+      "pattern": "^device-\\d{3}$",
+      "description": "Device identifier (e.g., device-001)"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": ["temperature", "pressure", "humidity", "motion", "light"],
+      "description": "Type of sensor device"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp with timezone"
+    },
+    "event_duration": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "Duration of the event in milliseconds"
+    },
+    "value": {
+      "type": "number",
+      "description": "Sensor reading value"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["normal", "warning", "critical"],
+      "description": "Status of the sensor reading"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["location", "firmware"],
+      "properties": {
+        "location": {
+          "type": "string",
+          "pattern": "^zone-[A-E]$",
+          "description": "Physical location zone"
+        },
+        "firmware": {
+          "type": "string",
+          "pattern": "^v\\d\\.\\d\\.\\d$",
+          "description": "Firmware version"
+        }
+      }
+    }
+  }
+}

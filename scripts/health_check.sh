@@ -49,6 +49,7 @@ check_http "MinIO Console" "http://localhost:9001" "200"
 
 # Spark
 check_http "Spark Master UI" "http://localhost:8080"
+check_http "Spark Worker UI" "http://localhost:8081"
 check_container "spark-worker"
 
 # Producer

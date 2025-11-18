@@ -203,6 +203,8 @@ services:
     container_name: spark-worker
     networks:
       - pipeline-net
+    ports:
+      - "8081:8081"
     depends_on:
       spark-master:
         condition: service_healthy

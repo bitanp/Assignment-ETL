@@ -461,6 +461,7 @@ make health
 | **MinIO Console**     | http://localhost:9001         | Browse Parquet files (minioadmin/minioadmin) |
 | **Prometheus**        | http://localhost:9090         | Raw metrics & querying                       |
 | **Spark Master UI**   | http://localhost:8080         | Job execution details                        |
+| **Spark Worker UI**   | http://localhost:8081         | Job execution details                        |
 | **Producer Metrics**  | http://localhost:8082/metrics | Prometheus format metrics                    |
 
 ### Demo Walkthrough

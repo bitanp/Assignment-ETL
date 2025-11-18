@@ -73,6 +73,10 @@ FIRMWARE_VERSIONS = [f'v{major}.{minor}.{patch}'
                     for minor in range(0, 6) 
                     for patch in range(0, 10)]
 
+# Pool of recent event IDs for duplicate generation (last 100 events)
+recent_event_ids: List[str] = []
+MAX_RECENT_IDS = 100
+
 
 def generate_event(device_id: str) -> Dict:
     """
@@ -97,8 +101,19 @@ def generate_event(device_id: str) -> Dict:
         weights=[s[1] for s in STATUS_WEIGHTS]
     )[0]
     
+    # 2% chance of duplicate (reuse existing event_id from recent events)
+    if recent_event_ids and random.random() < 0.02:
+        event_id = random.choice(recent_event_ids)
+    else:
+        event_id = str(uuid.uuid4())
+        # Store in recent IDs pool
+        recent_event_ids.append(event_id)
+        # Keep only last MAX_RECENT_IDS events
+        if len(recent_event_ids) > MAX_RECENT_IDS:
+            recent_event_ids.pop(0)
+    
     event = {
-        'event_id': str(uuid.uuid4()),
+        'event_id': event_id,
         'device_id': device_id,
         'device_type': device_type,
         'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -110,10 +125,6 @@ def generate_event(device_id: str) -> Dict:
             'firmware': random.choice(FIRMWARE_VERSIONS)
         }
     }
-    
-    # 2% chance of duplicate (for testing deduplication)
-    if random.random() < 0.02:
-        event['event_id'] = event['event_id']  # Will be reused
     
     return event
 
@@ -135,6 +146,11 @@ def validate_event(event: Dict) -> bool:
     
     # Check all required fields exist
     if not all(field in event for field in required_fields):
+        return False
+    
+    # Validate event_id is valid UUID
+    if not is_valid_uuid(event['event_id']):
+        logger.warning(f"Invalid event_id format: {event['event_id']}")
         return False
     
     # Validate duration is positive

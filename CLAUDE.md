@@ -8,7 +8,7 @@
 
 ## 📍 Quick Start by Role
 
-**Evaluators:** `README.md` → `EVALUATION_SUMMARY.md` → code review → `make test`
+**Evaluators:** `README.md` → code review → `make test`
 **LLM Assistants:** Read this entire file
 
 ---
@@ -427,8 +427,8 @@ For detailed rationale, see `README.md` (Design Decisions section):
 
 ## 🤝 Support & References
 
-- **Architecture** → `README.md` (Design Decisions section)
-- **Production readiness** → `EVALUATION_SUMMARY.md`
+- **Architecture** → `README.md` (Architecture and Design Decisions sections)
+- **Production readiness** → `README.md` (Testing and CI/CD sections)
 - **Function details** → Docstrings in source files
 - **Test patterns** → `tests/conftest.py`
 

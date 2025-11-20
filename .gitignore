@@ -69,4 +69,4 @@ aws_credentials
 logs/
 
 # Claude
-.claude
+.claude/

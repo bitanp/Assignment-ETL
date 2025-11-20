@@ -67,3 +67,6 @@ aws_credentials
 .aws/
 
 logs/
+
+# Claude
+.claude

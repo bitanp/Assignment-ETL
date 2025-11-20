@@ -44,57 +44,35 @@ histogram_quantile(0.95, rate(producer_message_size_bytes_bucket[5m]))
 
 ## ⚡ Kafka Metrics
 
-### Kafka Consumer Lag (Spark)
-```promql
-kafka_consumer_lag{group="spark-consumer"}
-```
-How far behind the Spark consumer is reading from Kafka. Should stay low (<1000 messages).
-
-### Kafka Under-Replicated Partitions
-```promql
-kafka_brokers_underreplicatedpartitions
-```
-Should be 0 for healthy cluster.
-
 ### Kafka Topic Partition Count
 ```promql
 kafka_topic_partitions{topic="iot-events"}
 ```
 Should be 3 (as configured).
 
-### Kafka Broker Status
+### Kafka Under-Replicated Partitions
+```promql
+sum(kafka_topic_partition_under_replicated_partition{topic="iot-events"})
+```
+Should be 0 for healthy cluster.
+
+### Kafka Current Offset
+```promql
+kafka_topic_partition_current_offset{topic="iot-events"}
+```
+Current offset for each partition showing total messages ingested.
+
+### Kafka Broker Count
+```promql
+kafka_brokers
+```
+Number of active Kafka brokers (should be 1 in this setup).
+
+### Kafka Exporter Status
 ```promql
 up{job="kafka"}
 ```
-Kafka broker health (1 = up, 0 = down).
-
----
-
-## 🚀 Spark Metrics
-
-### Spark Streaming Batch Duration
-```promql
-spark_streaming_batch_duration_seconds
-```
-How long each micro-batch takes to process (should be <10 seconds for 30s triggers).
-
-### Spark Streaming Batches Processed
-```promql
-spark_streaming_batches_submitted_total
-```
-Total batches processed since startup.
-
-### Spark Executor Count
-```promql
-spark_executor_count
-```
-Number of active Spark executors.
-
-### Spark Memory Usage
-```promql
-spark_executor_memory_used_bytes
-```
-Memory currently used by Spark executors.
+Kafka exporter health (1 = up, 0 = down).
 
 ---
 
@@ -140,29 +118,15 @@ Network output in bytes/sec.
 
 ## 📊 Combined Dashboards
 
-### Full Pipeline Health
+### Producer Throughput
 ```promql
-# Producer rate
-rate(producer_messages_sent_total[1m]) > 0
-AND
-# Kafka healthy
-up{job="kafka"} == 1
-AND
-# Low consumer lag
-kafka_consumer_lag{group="spark-consumer"} < 5000
-```
-
-### End-to-End Throughput
-```promql
-# Input to pipeline
-rate(producer_messages_sent_total[5m])
-# Output from pipeline (approximate)
-/ (1 + (kafka_consumer_lag{group="spark-consumer"} / 1000))
+# Total events/sec across all device types
+sum(rate(producer_messages_sent_total[5m]))
 ```
 
 ### System Load Assessment
 ```promql
-# CPU + Memory + Disk pressure combined
+# CPU + Memory pressure combined
 (
   (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100
   +
@@ -174,11 +138,11 @@ rate(producer_messages_sent_total[5m])
 
 ## ⚠️ Alerting Queries
 
-### Consumer Lag Too High
+### Producer Not Sending Events
 ```promql
-kafka_consumer_lag{group="spark-consumer"} > 10000
+rate(producer_messages_sent_total[5m]) == 0
 ```
-Alert if Spark is >10k messages behind in consuming.
+Alert if producer stops generating events.
 
 ### Producer Error Rate High
 ```promql
@@ -198,11 +162,11 @@ Alert when CPU exceeds 85%.
 ```
 Alert when less than 10% memory available.
 
-### Kafka Broker Down
+### Kafka Exporter Down
 ```promql
 up{job="kafka"} == 0
 ```
-Alert when Kafka broker is unreachable.
+Alert when Kafka exporter is unreachable.
 
 ---
 
@@ -222,42 +186,40 @@ groups:
   - name: streaming_etl
     interval: 30s
     rules:
-      - alert: HighConsumerLag
-        expr: kafka_consumer_lag{group="spark-consumer"} > 10000
-        for: 5m
+      - alert: ProducerNotSending
+        expr: rate(producer_messages_sent_total[5m]) == 0
+        for: 2m
         annotations:
-          summary: "Spark consumer lag is {{ $value }} messages"
+          summary: "Producer has stopped sending events"
 ```
 
 ---
 
 ## 📈 Common Monitoring Patterns
 
-### Track Producer → Kafka → Spark Flow
+### Track Producer → Kafka Flow
 ```promql
 # Watch this sequence:
 # 1. Producer sending rate
 rate(producer_messages_sent_total[1m])
 
-# 2. Kafka consumer lag (how much we're behind)
-kafka_consumer_lag{group="spark-consumer"}
+# 2. Kafka offset growth (messages being stored)
+rate(kafka_topic_partition_current_offset{topic="iot-events"}[5m])
 
-# 3. Spark processing time (is it keeping up?)
-spark_streaming_batch_duration_seconds
+# 3. Message size trends
+rate(producer_message_size_bytes_sum[5m]) / rate(producer_message_size_bytes_count[5m])
 ```
 
-### Detect Pipeline Slowdowns
+### Detect Producer Issues
 ```promql
-# If rate drops but lag grows = processing bottleneck
-(rate(producer_messages_sent_total[1m]) > 0)
-AND
-(kafka_consumer_lag{group="spark-consumer"} > kafka_consumer_lag{group="spark-consumer"} offset 5m)
+# Producer sending errors
+rate(producer_kafka_errors_total[5m]) > 0
 ```
 
-### Monitor Data Quality
+### Monitor Event Distribution
 ```promql
-# Count of invalid/dropped events (if implemented)
-rate(spark_events_dropped_total[5m])
+# Events per device type
+sum by (device_type) (rate(producer_messages_sent_total[1m]))
 ```
 
 ---

@@ -265,6 +265,8 @@ services:
     container_name: spark-streaming
     networks:
       - pipeline-net
+    ports:
+      - "4041:4040"
     depends_on:
       kafka-init:
         condition: service_completed_successfully

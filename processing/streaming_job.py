@@ -23,6 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Environment variables
+SPARK_MASTER_URL = os.getenv('SPARK_MASTER_URL', 'local[*]')
 KAFKA_BROKERS = os.getenv('KAFKA_BROKERS', 'kafka:29092')
 KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'iot-events')
 S3_ENDPOINT = os.getenv('S3_ENDPOINT', 'http://minio:9000')
@@ -41,6 +42,7 @@ def create_spark_session():
     """
     return SparkSession.builder \
         .appName("IoT-Streaming-ETL") \
+        .master(SPARK_MASTER_URL) \
         .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.1,org.apache.hadoop:hadoop-aws:3.4.1,com.amazonaws:aws-java-sdk-bundle:1.12.780") \
         .config("spark.sql.streaming.checkpointLocation", CHECKPOINT_LOCATION) \
         .config("spark.hadoop.fs.s3a.endpoint", S3_ENDPOINT) \
@@ -50,6 +52,10 @@ def create_spark_session():
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
         .config("spark.sql.shuffle.partitions", "200") \
         .config("spark.streaming.stopGracefullyOnShutdown", "true") \
+        .config("spark.ui.enabled", "true") \
+        .config("spark.ui.port", "4040") \
+        .config("spark.driver.host", "spark-streaming") \
+        .config("spark.driver.bindAddress", "0.0.0.0") \
         .getOrCreate()
 
 

@@ -38,8 +38,9 @@ ingestion/
 └── requirements.txt ............... kafka-python, prometheus-client
 
 processing/
-├── streaming_job.py ............... Spark ETL pipeline (206 lines)
-│   ├── create_spark_session() .... Configuration
+├── streaming_job.py ............... Spark ETL pipeline (210+ lines)
+│   ├── SPARK_MASTER_URL .......... Env var: spark://spark-master:7077 (cluster mode)
+│   ├── create_spark_session() .... Configuration (includes .master() for cluster)
 │   ├── get_event_schema() ........ Schema (MUST match producer)
 │   └── process_stream() .......... 7-step ETL:
 │       1. Read Kafka
@@ -69,10 +70,21 @@ tests/
 └── e2e/ .......................... 5+ tests (full stack, ~5min)
 
 infrastructure/
-├── docker-compose.yml ............ 11 services (Kafka, Spark, MinIO, Prometheus, Grafana)
+├── docker-compose.yml ............ 13 services (Kafka, Spark, MinIO, Prometheus, Grafana)
 ├── Makefile ...................... 15+ automation commands
 ├── monitoring/ ................... Prometheus config + Grafana dashboards
 └── scripts/ ...................... Helper scripts (health checks, AWS setup)
+```
+
+**Docker Services:**
+- kafka, kafka-init (KRaft mode broker + topic creation)
+- minio, minio-init (S3-compatible storage + bucket setup)
+- spark-master, spark-worker (Spark cluster)
+- spark-streaming (Streaming application driver)
+- producer (IoT event generator)
+- prometheus, kafka-exporter, node-exporter (Metrics collection)
+- grafana (Monitoring dashboards)
+- kafka-ui (Kafka topic inspection)
 ```
 
 ### Learning Materials (Independent)
@@ -87,6 +99,62 @@ infrastructure/
 | View Grafana   | `make monitoring`                      | Browser: localhost:3000 |
 | Stream logs    | `make logs-streaming \| grep -i error` | Debug job               |
 | Spark shell    | `make spark-shell`                     | Interactive PySpark     |
+
+---
+
+## 📊 Monitoring & UI Access
+
+### Available Web Interfaces
+
+| Service               | URL                           | Purpose                                      |
+| --------------------- | ----------------------------- | -------------------------------------------- |
+| **Grafana Dashboard** | http://localhost:3000         | Real-time pipeline monitoring (admin/admin)  |
+| **Spark Master UI**   | http://localhost:8080         | Cluster overview, running applications       |
+| **Spark Worker UI**   | http://localhost:8081         | Worker resources and executor details        |
+| **Kafka UI**          | http://localhost:8090         | Topic inspection & debugging                 |
+| **Prometheus**        | http://localhost:9090         | Raw metrics & querying                       |
+| **MinIO Console**     | http://localhost:9001         | Browse Parquet files (minioadmin/minioadmin) |
+| **Producer Metrics**  | http://localhost:8082/metrics | Prometheus format metrics                    |
+
+### ⚠️ Spark Streaming Application UI (Port 4040/4041) - NOT AVAILABLE
+
+**Why it doesn't work:**
+- The streaming job connects to cluster at `spark://spark-master:7077` (see `SPARK_MASTER_URL` in docker-compose.yml)
+- The driver runs in client mode inside the `spark-streaming` container
+- Spark's Jetty server for the application UI doesn't bind correctly to exposed ports in containerized environments
+- This is a **known limitation** of running Spark drivers in Docker containers
+
+**Code configuration (present but non-functional):**
+```python
+# processing/streaming_job.py
+.config("spark.ui.enabled", "true")
+.config("spark.ui.port", "4040")
+.config("spark.driver.host", "spark-streaming")
+.config("spark.driver.bindAddress", "0.0.0.0")
+```
+
+**Alternatives for monitoring the streaming application:**
+
+1. **Spark Master UI (Recommended)**
+   - Go to http://localhost:8080
+   - Click "IoT-Streaming-ETL" under "Running Applications"
+   - Access: Stages, SQL queries, Executors, Environment, Storage
+
+2. **Grafana Dashboard**
+   - http://localhost:3000
+   - Real-time metrics: throughput, batch timing, lag
+
+3. **Application Logs**
+   ```bash
+   make logs-streaming
+   make logs-streaming | grep -i "batch\|progress"
+   ```
+
+4. **Verify Processing**
+   ```bash
+   # Check Parquet output
+   docker exec minio mc ls local/data-lake/processed/ --recursive | tail -10
+   ```
 
 ---
 
@@ -227,6 +295,60 @@ def test_outlier_removal():
 make test-query
 ```
 
+### Pattern 5: Modify Spark Configuration
+
+**Files affected:** `processing/streaming_job.py`, `docker-compose.yml`
+**Complexity:** ⭐⭐⭐☆☆ (45 min)
+**Use case:** Change Spark cluster mode, add configurations, modify resources
+
+```python
+# processing/streaming_job.py
+
+# 1. Add environment variable for configuration
+SPARK_MASTER_URL = os.getenv('SPARK_MASTER_URL', 'local[*]')
+
+# 2. Use variable in SparkSession builder
+def create_spark_session():
+    return SparkSession.builder \
+        .appName("IoT-Streaming-ETL") \
+        .master(SPARK_MASTER_URL) \  # ← Connect to cluster
+        .config("spark.ui.enabled", "true") \
+        .config("spark.ui.port", "4040") \
+        .config("spark.driver.host", "spark-streaming") \
+        .config("spark.driver.bindAddress", "0.0.0.0") \
+        # ... other configs
+        .getOrCreate()
+```
+
+```yaml
+# docker-compose.yml → spark-streaming service
+
+environment:
+  SPARK_MASTER_URL: spark://spark-master:7077  # Cluster mode
+  # SPARK_MASTER_URL: local[*]                 # Local mode (alternative)
+
+ports:
+  - "4041:4040"  # Application UI port (note: may not work in client mode)
+```
+
+**Important Notes:**
+- Switching from `local[*]` to cluster mode changes executor allocation
+- Application UI (port 4040) doesn't work when driver is in containerized client mode
+- Use Spark Master UI (localhost:8080) → "Running Applications" instead
+- Test with: `docker logs spark-streaming | grep "Spark master:"`
+
+**Verify:**
+```bash
+# Restart and check mode
+make restart
+sleep 30
+docker logs spark-streaming | grep "Spark master:"
+# Should show: "Spark master: spark://spark-master:7077"
+
+# Check application in Master UI
+curl -s http://localhost:8080 | grep "IoT-Streaming-ETL"
+```
+
 ---
 
 ## 🔐 Schema Synchronization (Critical!)
@@ -286,19 +408,31 @@ make health | grep producer
 ### Streaming Job Errors
 
 ```bash
-# Check logs for errors
+# 1. Check logs for errors
 make logs-streaming | grep -i "error\|exception"
 
-# Check Spark UI
+# 2. Check Spark Master UI (cluster + applications)
 # http://localhost:8080
+# Click "IoT-Streaming-ETL" for application details
 
-# Check Kafka consumer lag
+# Note: Direct application UI (port 4040/4041) is NOT available
+# due to driver running in client mode within container.
+# See "Monitoring & UI Access" section above for alternatives.
+
+# 3. Check Grafana for real-time metrics
+# http://localhost:3000
+# View batch timing, throughput, errors
+
+# 4. Verify job is processing data
+docker exec minio mc ls local/data-lake/processed/ --recursive | tail -10
+
+# 5. Check Kafka consumer lag
 docker exec kafka kafka-consumer-groups.sh \
   --bootstrap-server kafka:9092 \
   --group spark-consumer \
   --describe
 
-# Restart job
+# 6. Restart job if needed
 make restart
 ```
 

@@ -7,7 +7,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 import sys
 sys.path.insert(0, '/opt/spark/work-dir')
-sys.path.append('/processing')
+sys.path.append('/app/processing')
 
 
 @pytest.fixture(scope="session")

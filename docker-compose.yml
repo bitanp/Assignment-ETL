@@ -247,12 +247,14 @@ services:
       - "8082:8082"
     volumes:
       - ./ingestion:/app
+      - ./processing:/app/processing
+      - ./query:/app/query
       - ./tests:/app/tests
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: 512M
+          cpus: "2"
+          memory: 2G
     restart: unless-stopped
 
   # ============================================

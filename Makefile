@@ -1,4 +1,9 @@
 # ============================================================================
+# Shell Configuration
+# ============================================================================
+SHELL := /bin/bash
+
+# ============================================================================
 # Color & Styling Variables
 # ============================================================================
 RESET      := \033[0m
@@ -35,213 +40,233 @@ BG_CYAN   := \033[46m
 # ============================================================================
 # Formatting Helpers
 # ============================================================================
-TITLE      = @echo "$(BOLD)$(BRIGHT_CYAN)════════════════════════════════════════════════════════════════$(RESET)"
-HEADER     = @echo "$(BOLD)$(CYAN)▸$(RESET)"
-SECTION    = @echo "$(BOLD)$(BRIGHT_CYAN)"
-SUCCESS    = @echo "$(BOLD)$(BRIGHT_GREEN)✓$(RESET)"
-WARNING    = @echo "$(BOLD)$(BRIGHT_YELLOW)⚠$(RESET)"
-ERROR      = @echo "$(BOLD)$(BRIGHT_RED)✗$(RESET)"
-INFO       = @echo "$(DIM)ℹ$(RESET)"
-HINT       = @echo "$(DIM)→$(RESET)"
+TITLE      = @printf "\033[1m\033[96m════════════════════════════════════════════════════════════════\033[0m\n"
+HEADER     = @printf "\033[1m\033[36m▸\033[0m "
+SECTION    = @printf "\033[1m\033[96m"
+SUCCESS    = @printf "\033[1m\033[92m✓\033[0m "
+WARNING    = @printf "\033[1m\033[93m⚠\033[0m "
+ERROR      = @printf "\033[1m\033[91m✗\033[0m "
+INFO       = @printf "\033[90mℹ\033[0m "
+HINT       = @printf "\033[90m→\033[0m "
 
 .PHONY: help up down restart logs logs-producer logs-streaming logs-kafka logs-minio health clean test test-unit test-integration test-e2e test-query spark-shell monitoring kafka-topics
 
 help:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)📚 Real-Time Streaming ETL Pipeline - Commands$(RESET)"
+	@printf "\033[1m\033[96m📚 Real-Time Streaming ETL Pipeline - Commands\033[0m\n"
 	$(TITLE)
-	@echo ""
-	@echo "$(BOLD)🚀 ORCHESTRATION$(RESET)"
-	@echo "  $(BLUE)make up$(RESET)              Start all 11 services (Kafka, Spark, MinIO, etc.)"
-	@echo "  $(BLUE)make down$(RESET)            Stop all services gracefully"
-	@echo "  $(BLUE)make restart$(RESET)         Restart all services"
-	@echo "  $(BLUE)make health$(RESET)          Health check for all services"
-	@echo "  $(BLUE)make clean$(RESET)           Remove all volumes & data (⚠️ DESTRUCTIVE)"
-	@echo ""
-	@echo "$(BOLD)📊 LOGGING$(RESET)"
-	@echo "  $(YELLOW)make logs$(RESET)           Stream all service logs (real-time)"
-	@echo "  $(YELLOW)make logs-producer$(RESET)   Stream producer logs (IoT event generator)"
-	@echo "  $(YELLOW)make logs-streaming$(RESET)  Stream Spark Streaming logs (ETL pipeline)"
-	@echo "  $(YELLOW)make logs-kafka$(RESET)      Stream Kafka logs (message broker)"
-	@echo "  $(YELLOW)make logs-minio$(RESET)      Stream MinIO logs (object storage)"
-	@echo ""
-	@echo "$(BOLD)🧪 TESTING$(RESET)"
-	@echo "  $(MAGENTA)make test$(RESET)             Run all tests (unit + integration)"
-	@echo "  $(MAGENTA)make test-unit$(RESET)        Run unit tests (fast, ~10s)"
-	@echo "  $(MAGENTA)make test-integration$(RESET) Run integration tests (with Kafka/MinIO, ~2m)"
-	@echo "  $(MAGENTA)make test-e2e$(RESET)         Run end-to-end tests (full stack, ~5m)"
-	@echo ""
-	@echo "$(BOLD)📈 ANALYTICS & MONITORING$(RESET)"
-	@echo "  $(GREEN)make test-query$(RESET)      Run 95th percentile analytics query"
-	@echo "  $(GREEN)make spark-shell$(RESET)     Open interactive PySpark shell"
-	@echo "  $(GREEN)make monitoring$(RESET)      Open Grafana dashboard (http://localhost:3000)"
-	@echo "  $(GREEN)make kafka-topics$(RESET)    List Kafka topics & partition info"
-	@echo ""
+	@printf "\n"
+	@printf "\033[1m🚀 ORCHESTRATION\033[0m\n"
+	@printf "  \033[34mmake up\033[0m              Start all services (Kafka, Spark, MinIO, monitoring, etc.)\n"
+	@printf "  \033[34mmake down\033[0m            Stop all services gracefully\n"
+	@printf "  \033[34mmake restart\033[0m         Restart all services\n"
+	@printf "  \033[34mmake health\033[0m          Health check for all services\n"
+	@printf "  \033[34mmake clean\033[0m           Remove all volumes & data (⚠️  DESTRUCTIVE)\n"
+	@printf "\n"
+	@printf "\033[1m📊 LOGGING\033[0m\n"
+	@printf "  \033[33mmake logs\033[0m           Stream all service logs (real-time)\n"
+	@printf "  \033[33mmake logs-producer\033[0m   Stream producer logs (IoT event generator)\n"
+	@printf "  \033[33mmake logs-streaming\033[0m  Stream Spark Streaming logs (ETL pipeline)\n"
+	@printf "  \033[33mmake logs-kafka\033[0m      Stream Kafka logs (message broker)\n"
+	@printf "  \033[33mmake logs-minio\033[0m      Stream MinIO logs (object storage)\n"
+	@printf "\n"
+	@printf "\033[1m🧪 TESTING\033[0m\n"
+	@printf "  \033[35mmake test\033[0m             Run all tests (unit + integration)\n"
+	@printf "  \033[35mmake test-unit\033[0m        Run unit tests (fast, ~10s)\n"
+	@printf "  \033[35mmake test-integration\033[0m Run integration tests (with Kafka/MinIO, ~2m)\n"
+	@printf "  \033[35mmake test-e2e\033[0m         Run end-to-end tests (full stack, ~5m)\n"
+	@printf "\n"
+	@printf "\033[1m📈 ANALYTICS & MONITORING\033[0m\n"
+	@printf "  \033[32mmake test-query\033[0m      Run 95th percentile analytics query\n"
+	@printf "  \033[32mmake spark-shell\033[0m     Open interactive PySpark shell\n"
+	@printf "  \033[32mmake monitoring\033[0m      Open Grafana dashboard (http://localhost:3000)\n"
+	@printf "  \033[32mmake kafka-topics\033[0m    List Kafka topics & partition info\n"
+	@printf "\n"
 	$(TITLE)
 
 up:
 	$(TITLE)
-	$(SECTION)🚀 Starting all services...$(RESET)
+	@printf "\033[1m\033[96m🚀 Starting all services...\033[0m\n"
 	@docker compose up -d
 	@sleep 2
-	$(SUCCESS) $(BOLD)Stack started successfully!$(RESET)
-	$(HINT) Run $(BOLD)make health$(RESET) to verify all services
+	$(SUCCESS)
+	@printf "\033[1mStack started successfully!\033[0m\n"
+	$(HINT)
+	@printf "Run \033[1mmake health\033[0m to verify all services\n"
 	$(TITLE)
 
 down:
 	$(TITLE)
-	$(SECTION)🛑 Stopping all services...$(RESET)
+	@printf "\033[1m\033[96m🛑 Stopping all services...\033[0m\n"
 	@docker compose down
-	$(SUCCESS) $(BOLD)All services stopped.$(RESET)
+	$(SUCCESS)
+	@printf "\033[1mAll services stopped.\033[0m\n"
 	$(TITLE)
 
 restart:
 	$(TITLE)
-	$(SECTION)🔄 Restarting all services...$(RESET)
+	@printf "\033[1m\033[96m🔄 Restarting all services...\033[0m\n"
 	@docker compose restart
-	$(SUCCESS) $(BOLD)All services restarted.$(RESET)
-	$(HINT) Run $(BOLD)make health$(RESET) to verify
+	$(SUCCESS)
+	@printf "\033[1mAll services restarted.\033[0m\n"
+	$(HINT)
+	@printf "Run \033[1mmake health\033[0m to verify\n"
 	$(TITLE)
 
 logs:
 	$(TITLE)
-	$(SECTION)📊 Streaming logs from all services$(RESET)
-	$(DIM)Press Ctrl+C to stop$(RESET)
+	@printf "\033[1m\033[96m📊 Streaming logs from all services\033[0m\n"
+	@printf "\033[90mPress Ctrl+C to stop\033[0m\n"
 	$(TITLE)
 	@docker compose logs -f
 
 logs-producer:
 	$(TITLE)
-	$(SECTION)🔌 Producer Logs (IoT Event Generator)$(RESET)
-	$(DIM)Press Ctrl+C to stop$(RESET)
+	@printf "\033[1m\033[96m🔌 Producer Logs (IoT Event Generator)\033[0m\n"
+	@printf "\033[90mPress Ctrl+C to stop\033[0m\n"
 	$(TITLE)
 	@docker compose logs -f producer | while IFS= read -r line; do \
 		if echo "$$line" | grep -q "ERROR\|exception"; then \
-			echo "$(RED)[PRODUCER]$(RESET) $$line"; \
+			printf "\033[31m[PRODUCER]\033[0m $$line\n"; \
 		elif echo "$$line" | grep -q "messages_sent\|healthy"; then \
-			echo "$(GREEN)[PRODUCER]$(RESET) $$line"; \
+			printf "\033[32m[PRODUCER]\033[0m $$line\n"; \
 		else \
-			echo "$(YELLOW)[PRODUCER]$(RESET) $$line"; \
+			printf "\033[33m[PRODUCER]\033[0m $$line\n"; \
 		fi; \
 	done
 
 logs-streaming:
 	$(TITLE)
-	$(SECTION)⚡ Spark Streaming Logs (ETL Pipeline)$(RESET)
-	$(DIM)Press Ctrl+C to stop$(RESET)
+	@printf "\033[1m\033[96m⚡ Spark Streaming Logs (ETL Pipeline)\033[0m\n"
+	@printf "\033[90mPress Ctrl+C to stop\033[0m\n"
 	$(TITLE)
 	@docker compose logs -f spark-streaming | while IFS= read -r line; do \
 		if echo "$$line" | grep -qE "ERROR|FATAL|Exception"; then \
-			echo "$(BRIGHT_RED)[SPARK]$(RESET) $$line"; \
+			printf "\033[91m[SPARK]\033[0m $$line\n"; \
 		elif echo "$$line" | grep -q "WARN"; then \
-			echo "$(BRIGHT_YELLOW)[SPARK]$(RESET) $$line"; \
+			printf "\033[93m[SPARK]\033[0m $$line\n"; \
 		elif echo "$$line" | grep -qE "SUCCESS|FINISHED|healthy|tasks"; then \
-			echo "$(BRIGHT_GREEN)[SPARK]$(RESET) $$line"; \
+			printf "\033[92m[SPARK]\033[0m $$line\n"; \
 		else \
-			echo "$(BRIGHT_CYAN)[SPARK]$(RESET) $$line"; \
+			printf "\033[96m[SPARK]\033[0m $$line\n"; \
 		fi; \
 	done
 
 logs-kafka:
 	$(TITLE)
-	$(SECTION)🚀 Kafka Logs (Message Broker)$(RESET)
-	$(DIM)Press Ctrl+C to stop$(RESET)
+	@printf "\033[1m\033[96m🚀 Kafka Logs (Message Broker)\033[0m\n"
+	@printf "\033[90mPress Ctrl+C to stop\033[0m\n"
 	$(TITLE)
 	@docker compose logs -f kafka | while IFS= read -r line; do \
 		if echo "$$line" | grep -q "ERROR"; then \
-			echo "$(RED)[KAFKA]$(RESET) $$line"; \
+			printf "\033[31m[KAFKA]\033[0m $$line\n"; \
 		elif echo "$$line" | grep -q "leader\|replica"; then \
-			echo "$(GREEN)[KAFKA]$(RESET) $$line"; \
+			printf "\033[32m[KAFKA]\033[0m $$line\n"; \
 		else \
-			echo "$(BLUE)[KAFKA]$(RESET) $$line"; \
+			printf "\033[34m[KAFKA]\033[0m $$line\n"; \
 		fi; \
 	done
 
 logs-minio:
 	$(TITLE)
-	$(SECTION)💾 MinIO Logs (Object Storage)$(RESET)
-	$(DIM)Press Ctrl+C to stop$(RESET)
+	@printf "\033[1m\033[96m💾 MinIO Logs (Object Storage)\033[0m\n"
+	@printf "\033[90mPress Ctrl+C to stop\033[0m\n"
 	$(TITLE)
 	@docker compose logs -f minio | while IFS= read -r line; do \
 		if echo "$$line" | grep -q "ERROR"; then \
-			echo "$(RED)[MINIO]$(RESET) $$line"; \
+			printf "\033[31m[MINIO]\033[0m $$line\n"; \
 		else \
-			echo "$(MAGENTA)[MINIO]$(RESET) $$line"; \
+			printf "\033[35m[MINIO]\033[0m $$line\n"; \
 		fi; \
 	done
 
 health:
 	$(TITLE)
-	$(SECTION)🏥 Health Check$(RESET)
-	$(DIM)Verifying all services...$(RESET)
+	@printf "\033[1m\033[96m🏥 Health Check\033[0m\n"
+	@printf "\033[90mVerifying all services...\033[0m\n"
 	$(TITLE)
 	@./scripts/health_check.sh
 
 clean:
 	$(TITLE)
-	$(WARNING) $(BOLD)DESTRUCTIVE OPERATION: Removing all volumes and data$(RESET)
-	@read -p "$(BRIGHT_RED)Are you sure? Type 'yes' to confirm: $(RESET)" confirm; \
+	$(WARNING)
+	@printf "\033[1mDESTRUCTIVE OPERATION: Removing all volumes and data\033[0m\n"
+	@read -p "$$(printf '\033[93mAre you sure? Type yes to confirm: \033[0m')" confirm; \
 	if [ "$$confirm" = "yes" ]; then \
-		echo "$(BRIGHT_RED)[CLEAN]$(RESET) Removing all containers and volumes..."; \
+		printf "\033[91m[CLEAN]\033[0m Removing all containers and volumes...\n"; \
 		docker compose down -v; \
-		echo "$(BRIGHT_RED)[CLEAN]$(RESET) ✓ All data removed."; \
+		printf "\033[91m[CLEAN]\033[0m ✓ All data removed.\n"; \
 	else \
-		echo "$(GREEN)[CLEAN]$(RESET) Operation cancelled."; \
+		printf "\033[32m[CLEAN]\033[0m Operation cancelled.\n"; \
 	fi
 	$(TITLE)
 
 test:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)🧪 Running All Tests - unit + integration + e2e$(RESET)"
-	@echo "$(DIM)Executing comprehensive test suite...$(RESET)"
+	@printf "\033[1m\033[96m🧪 Running All Tests - unit + integration + e2e\033[0m\n"
+	@printf "\033[90mInstalling test dependencies...\033[0m\n"
+	@docker compose exec -T producer pip install -q -r /app/tests/requirements.txt
+	@printf "\033[90mExecuting comprehensive test suite...\033[0m\n"
 	$(TITLE)
-	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 MINIO_ENDPOINT=http://minio:9000 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/ -v --tb=short --timeout=300"
-	$(SUCCESS) $(BOLD)All tests completed!$(RESET)
+	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 MINIO_ENDPOINT=http://minio:9000 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/ -v --tb=short"
+	$(SUCCESS)
+	@printf "\033[1mAll tests completed!\033[0m\n"
 	$(TITLE)
 
 test-unit:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)⚡ Unit Tests - Fast, no external deps$(RESET)"
-	@echo "$(DIM)Running in-memory tests - ~10s$(RESET)"
+	@printf "\033[1m\033[96m⚡ Unit Tests\033[0m\n"
+	@printf "\033[90mInstalling test dependencies...\033[0m\n"
+	@docker compose exec -T producer pip install -q -r /app/tests/requirements.txt
+	@printf "\033[90mRunning in-memory tests - ~10s\033[0m\n"
 	$(TITLE)
 	@docker compose exec -T producer bash -c "PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/unit/ -v --tb=short"
-	$(SUCCESS) $(BOLD)Unit tests completed!$(RESET)
+	$(SUCCESS)
+	@printf "\033[1mUnit tests completed!\033[0m\n"
 	$(TITLE)
 
 test-integration:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)🔗 Integration Tests - with Kafka & MinIO$(RESET)"
-	@echo "$(DIM)Running tests with external services - ~2m$(RESET)"
+	@printf "\033[1m\033[96m🔗 Integration Tests - with Kafka & MinIO\033[0m\n"
+	@printf "\033[90mInstalling test dependencies...\033[0m\n"
+	@docker compose exec -T producer pip install -q -r /app/tests/requirements.txt
+	@printf "\033[90mRunning tests with external services - ~2m\033[0m\n"
 	$(TITLE)
-	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/integration/ -v --tb=short --timeout=300"
-	$(SUCCESS) $(BOLD)Integration tests completed!$(RESET)
+	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/integration/ -v --tb=short"
+	$(SUCCESS)
+	@printf "\033[1mIntegration tests completed!\033[0m\n"
 	$(TITLE)
 
 test-e2e:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)🚀 End-to-End Tests - full pipeline$(RESET)"
-	@echo "$(DIM)Running complete stack validation - ~5m$(RESET)"
+	@printf "\033[1m\033[96m🚀 End-to-End Tests - full pipeline\033[0m\n"
+	@printf "\033[90mInstalling test dependencies...\033[0m\n"
+	@docker compose exec -T producer pip install -q -r /app/tests/requirements.txt
+	@printf "\033[90mRunning complete stack validation - ~5m\033[0m\n"
 	$(TITLE)
-	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 MINIO_ENDPOINT=http://minio:9000 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/e2e/ -v --tb=short --timeout=300"
-	$(SUCCESS) $(BOLD)E2E tests completed!$(RESET)
+	@docker compose exec -T producer bash -c "KAFKA_BROKERS=kafka:29092 MINIO_ENDPOINT=http://minio:9000 PYTHONPATH=/app/ingestion:/app/processing:/app/query:/app pytest /app/tests/e2e/ -v --tb=short"
+	$(SUCCESS)
+	@printf "\033[1mE2E tests completed!\033[0m\n"
 	$(TITLE)
 
 test-query:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)📊 95th Percentile Analytics Query$(RESET)"
-	@echo "$(DIM)Computing percentile statistics...$(RESET)"
+	@printf "\033[1m\033[96m📊 95th Percentile Analytics Query\033[0m\n"
+	@printf "\033[90mComputing percentile statistics...\033[0m\n"
 	$(TITLE)
 	@docker compose exec spark-master spark-submit \
 		--master spark://spark-master:7077 \
 		/opt/spark/work-dir/query/percentile_query.py
-	$(SUCCESS) $(BOLD)Query completed!$(RESET)
-	@echo "$(DIM)→$(RESET) Results: $(BOLD)query_results.csv$(RESET)"
+	$(SUCCESS)
+	@printf "\033[1mQuery completed!\033[0m\n"
+	$(HINT)
+	@printf "Results: \033[1mquery_results.csv\033[0m\n"
 	$(TITLE)
 
 spark-shell:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)🔥 Interactive PySpark Shell$(RESET)"
-	@echo "$(DIM)Launching with S3A configuration...$(RESET)"
+	@printf "\033[1m\033[96m🔥 Interactive PySpark Shell\033[0m\n"
+	@printf "\033[90mLaunching with S3A configuration...\033[0m\n"
 	$(TITLE)
 	@docker compose exec spark-master pyspark \
 		--master spark://spark-master:7077 \
@@ -253,16 +278,17 @@ spark-shell:
 
 monitoring:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)📈 Opening Grafana Dashboard$(RESET)"
-	@echo "$(DIM)Dashboard: http://localhost:3000$(RESET)"
-	@echo "$(DIM)→$(RESET) Credentials: $(BOLD)admin / admin$(RESET)"
+	@printf "\033[1m\033[96m📈 Opening Grafana Dashboard\033[0m\n"
+	@printf "\033[90mDashboard: http://localhost:3000\033[0m\n"
+	$(HINT)
+	@printf "Credentials: \033[1madmin / admin\033[0m\n"
 	$(TITLE)
 	@open http://localhost:3000 2>/dev/null || xdg-open http://localhost:3000 2>/dev/null || \
-		echo "$(BRIGHT_YELLOW)Open manually: http://localhost:3000$(RESET)"
+		printf "\033[93mOpen manually: http://localhost:3000\033[0m\n"
 
 kafka-topics:
 	$(TITLE)
-	@echo "$(BOLD)$(BRIGHT_CYAN)📋 Kafka Topics & Partitions$(RESET)"
+	@printf "\033[1m\033[96m📋 Kafka Topics & Partitions\033[0m\n"
 	$(TITLE)
 	@docker compose exec kafka /opt/kafka/bin/kafka-topics.sh \
 		--bootstrap-server localhost:9092 --list

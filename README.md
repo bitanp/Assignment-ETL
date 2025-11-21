@@ -499,7 +499,7 @@ pip install -r tests/requirements.txt
 PYTHONPATH=ingestion:processing:query:. pytest tests/unit/ -v
 
 # Run transformation tests (needs Spark)
-PYTHONPATH=ingestion:processing:query:. pytest tests/unit/test_trasformations.py -v
+PYTHONPATH=ingestion:processing:query:. pytest tests/unit/test_transformations.py -v
 
 # Run all tests except E2E (requires pipeline)
 PYTHONPATH=ingestion:processing:query:. pytest tests/unit/ tests/integration/ -v --co -k "not e2e"
@@ -565,9 +565,9 @@ streaming-etl-pipeline/
 │   ├── conftest.py             # Pytest fixtures
 │   ├── requirements.txt
 │   ├── unit/                   # Fast, no external deps
-│   │   ├── test_producer.py    # Event validation (12 tests)
-│   │   ├── test_schema.py      # Schema compliance (8 tests)
-│   │   └── test_trasformations.py # ETL logic (5 tests)
+│   │   ├── test_producer.py    # Event validation (13 tests)
+│   │   ├── test_schema.py      # Schema compliance (10 tests)
+│   │   └── test_transformations.py # ETL logic (5 tests)
 │   ├── integration/            # Kafka + MinIO required
 │   │   └── test_kafka_integration.py
 │   └── e2e/                    # Full stack
@@ -841,8 +841,8 @@ aws emr add-steps \
 ```
 tests/
 ├── unit/               # No external deps, run in seconds
-│   ├── test_producer.py (12 tests)
-│   ├── test_schema.py (8 tests)
+│   ├── test_producer.py (13 tests)
+│   ├── test_schema.py (10 tests)
 │   └── test_transformations.py (5 tests)
 │
 ├── integration/        # Kafka/MinIO required, ~2 minutes
@@ -899,8 +899,8 @@ Triggered on:
    └─ flake8, black, mypy
 
 2. UNIT TESTS (3 min)
-   ├─ test_producer.py (12 tests)
-   ├─ test_schema.py (8 tests)
+   ├─ test_producer.py (13 tests)
+   ├─ test_schema.py (10 tests)
    └─ test_transformations.py (5 tests)
 
 3. BUILD DOCKER IMAGES (5 min, parallel)
